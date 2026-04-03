@@ -7,6 +7,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 const canvas = document.querySelector("#experience-canvas");
 const sizes = { height: window.innerHeight, width: window.innerWidth };
 
+const zAxixFans = [];
+
 // Loaders
 const textureLoader = new THREE.TextureLoader();
 
@@ -67,7 +69,7 @@ const videoTexture = new THREE.VideoTexture(videoElement);
 videoTexture.colorSpace = THREE.SRGBColorSpace;
 videoTexture.flipY = false;
 
-loader.load("/models/Room_Portfolio_V1.glb", (glb) => {
+loader.load("/models/Room_Portfolio_V4.glb", (glb) => {
   glb.scene.traverse((child) => {
     if (child.isMesh) {
       if (child.name.includes("Glass")) {
@@ -84,6 +86,10 @@ loader.load("/models/Room_Portfolio_V1.glb", (glb) => {
             });
 
             child.material = material;
+
+            if (child.name.includes("Fan")) {
+              zAxixFans.push(child);
+            }
 
             if (child.material.map) {
               child.material.map.minFilter = THREE.LinearFilter;
@@ -145,6 +151,11 @@ const render = (time) => {
   //   console.log(camera.position);
   //   console.log("------");
   //   console.log(controls.target);
+
+  // Animate Fans
+  zAxixFans.forEach((fan) => {
+    fan.rotation.z -= 0.06;
+  });
 
   renderer.render(scene, camera);
 
