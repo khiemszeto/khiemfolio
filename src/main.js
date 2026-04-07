@@ -1,6 +1,6 @@
 import "./style.scss";
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { OrbitControls } from "./utils/OrbitControls.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import gsap from "gsap";
@@ -12,17 +12,46 @@ const modals = {
   work: document.querySelector(".modal.work"),
   about: document.querySelector(".modal.about"),
   contact: document.querySelector(".modal.contact"),
+  poli: document.querySelector(".modal.poli"),
 };
 
+let touchHappened = false;
+
 document.querySelectorAll(".modal-exit-button").forEach((button) => {
-  button.addEventListener("click", (e) => {
-    const modal = e.target.closest(".modal");
-    hideModal(modal);
-  });
+  button.addEventListener(
+    "touchend",
+    (e) => {
+      touchHappened = true;
+      const modal = e.target.closest(".modal");
+      hideModal(modal);
+    },
+    { passive: false }
+  );
+  button.addEventListener(
+    "click",
+    (e) => {
+      if (touchHappened) return;
+      const modal = e.target.closest(".modal");
+      hideModal(modal);
+    },
+    { passive: false }
+  );
 });
+
+let isModalOpen = false;
 
 const showModal = (modal) => {
   modal.style.display = "block";
+  isModalOpen = true;
+  controls.enabled = false;
+
+  if (currentHoveredObject) {
+    playHoverAnimation(currentHoveredObject, false);
+    currentHoveredObject = null;
+  }
+
+  document.body.style.cursor = "default";
+  currentIntersects = [];
 
   gsap.set(modal, { opacity: 0 });
 
@@ -33,6 +62,9 @@ const showModal = (modal) => {
 };
 
 const hideModal = (modal) => {
+  isModalOpen = false;
+  controls.enabled = true;
+
   gsap.to(modal, {
     opacity: 0,
     duration: 0.5,
@@ -43,9 +75,14 @@ const hideModal = (modal) => {
 };
 
 const zAxixFans = [];
+// let chairTop;
+let coffeePosition;
+
+const items = {};
 
 const raycasterObjects = [];
 let currentIntersects = [];
+let currentHoveredObject = null;
 
 const socialLinks = {
   Github: "https://github.com",
@@ -55,6 +92,8 @@ const socialLinks = {
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+
+const hitboxToObjectMap = new Map();
 
 // Loaders
 const textureLoader = new THREE.TextureLoader();
@@ -117,11 +156,128 @@ videoTexture.colorSpace = THREE.SRGBColorSpace;
 videoTexture.flipY = false;
 
 window.addEventListener("mousemove", (e) => {
+  touchHappened = false;
   pointer.x = (e.clientX / sizes.width) * 2 - 1;
   pointer.y = -(e.clientY / sizes.height) * 2 + 1;
 });
 
-window.addEventListener("click", (e) => {
+window.addEventListener(
+  "touchstart",
+  (e) => {
+    if (isModalOpen) return;
+    e.preventDefault();
+    pointer.x = (e.touches[0].clientX / sizes.width) * 2 - 1;
+    pointer.y = -(e.touches[0].clientY / sizes.height) * 2 + 1;
+  },
+  { passive: false }
+);
+
+function shouldUseOriginalMesh(objectName) {
+  return useOriginalMeshObjects.some((meshName) =>
+    objectName.includes(meshName)
+  );
+}
+
+function createStaticHitbox(originalObject) {
+  // Check if we should use original mesh
+  if (shouldUseOriginalMesh(originalObject.name)) {
+    if (!originalObject.userData.initialScale) {
+      originalObject.userData.initialScale = new THREE.Vector3().copy(
+        originalObject.scale
+      );
+    }
+    if (!originalObject.userData.initialPosition) {
+      originalObject.userData.initialPosition = new THREE.Vector3().copy(
+        originalObject.position
+      );
+    }
+    if (!originalObject.userData.initialRotation) {
+      originalObject.userData.initialRotation = new THREE.Euler().copy(
+        originalObject.rotation
+      );
+    }
+
+    originalObject.userData.originalObject = originalObject;
+    return originalObject;
+  }
+
+  if (!originalObject.userData.initialScale) {
+    originalObject.userData.initialScale = new THREE.Vector3().copy(
+      originalObject.scale
+    );
+  }
+  if (!originalObject.userData.initialPosition) {
+    originalObject.userData.initialPosition = new THREE.Vector3().copy(
+      originalObject.position
+    );
+  }
+  if (!originalObject.userData.initialRotation) {
+    originalObject.userData.initialRotation = new THREE.Euler().copy(
+      originalObject.rotation
+    );
+  }
+
+  const currentScale = originalObject.scale.clone();
+  const hasZeroScale =
+    currentScale.x === 0 || currentScale.y === 0 || currentScale.z === 0;
+
+  if (hasZeroScale && originalObject.userData.originalScale) {
+    originalObject.scale.copy(originalObject.userData.originalScale);
+  }
+
+  const box = new THREE.Box3().setFromObject(originalObject);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  if (hasZeroScale) {
+    originalObject.scale.copy(currentScale);
+  }
+
+  let hitboxGeometry;
+  let sizeMultiplier = { x: 1.1, y: 1.75, z: 1.1 };
+
+  hitboxGeometry = new THREE.BoxGeometry(
+    size.x * sizeMultiplier.x,
+    size.y * sizeMultiplier.y,
+    size.z * sizeMultiplier.z
+  );
+
+  const hitboxMaterial = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    visible: false,
+  });
+
+  const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+  hitbox.position.copy(center);
+  hitbox.name = originalObject.name + "_Hitbox";
+  hitbox.userData.originalObject = originalObject;
+
+  if (originalObject.name.includes("Headphones")) {
+    hitbox.rotation.x = 0;
+    hitbox.rotation.y = Math.PI / 4;
+    hitbox.rotation.z = 0;
+  }
+
+  return hitbox;
+}
+
+function createDelayedHitboxes() {
+  objectsNeedingHitboxes.forEach((child) => {
+    const raycastObject = createStaticHitbox(child);
+
+    if (raycastObject !== child) {
+      scene.add(raycastObject);
+    }
+
+    raycasterObjects.push(raycastObject);
+    hitboxToObjectMap.set(raycastObject, child);
+  });
+
+  objectsNeedingHitboxes.length = 0;
+}
+
+function handleRaycasterInteraction() {
   if (currentIntersects.length > 0) {
     const object = currentIntersects[0].object;
 
@@ -141,16 +297,175 @@ window.addEventListener("click", (e) => {
       showModal(modals.contact);
     } else if (object.name.includes("About_Button")) {
       showModal(modals.about);
+    } else if (object.name.includes("Poliwhirl")) {
+      showModal(modals.poli);
     }
   }
-});
+}
 
-loader.load("/models/Room_Portfolio_V5.glb", (glb) => {
+window.addEventListener(
+  "touchend",
+  (e) => {
+    if (isModalOpen) return;
+    e.preventDefault();
+    handleRaycasterInteraction();
+  },
+  { passive: false }
+);
+
+window.addEventListener("click", handleRaycasterInteraction);
+
+loader.load("/models/Room_Portfolio_V10.glb", (glb) => {
   glb.scene.traverse((child) => {
     if (child.isMesh) {
+      if (child.name.includes("Chair_Top")) {
+        items.Chair_Top = {
+          mesh: child,
+          initialRotation: child.rotation.clone(),
+        };
+      }
+
+      if (child.name.includes("Coffee")) {
+        items.Coffee_Cup = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
+      if (child.name.includes("Headphone")) {
+        items.Headphone = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
+      if (child.name.includes("Poliwhirl")) {
+        items.Poliwhirl = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
+      if (child.name.includes("Micro")) {
+        items.Micro = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
+      if (child.name.includes("Photo")) {
+        const key = child.name;
+        items[key] = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
+      if (child.name.includes("Pepper")) {
+        const key = child.name;
+        items[key] = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
+      if (child.name.includes("Box")) {
+        const key = child.name;
+        items[key] = {
+          mesh: child,
+          hover: child.name.includes("Hover"),
+          raycaster: child.name.includes("Raycaster"),
+          hoverMode: "scaleOnly",
+        };
+
+        child.userData.initialScale = child.scale.clone();
+      }
+
       if (child.name.includes("Raycaster")) {
         raycasterObjects.push(child);
       }
+
+      if (child.name.includes("Hover")) {
+        child.userData.initialScale = new THREE.Vector3().copy(child.scale);
+        child.userData.initialPosition = new THREE.Vector3().copy(
+          child.position
+        );
+        child.userData.initialRotation = new THREE.Euler().copy(child.rotation);
+      }
+
+      if (child.name.includes("Plank_1")) {
+        items.Plank_1 = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 1);
+      }
+
+      if (child.name.includes("Plank_2")) {
+        items.Plank_2 = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 0);
+      }
+
+      if (child.name.includes("Work")) {
+        items.Work = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 0);
+      }
+
+      if (child.name.includes("About")) {
+        items.About = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 0);
+      }
+
+      if (child.name.includes("Contact")) {
+        items.Contact = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 0);
+      }
+
+      if (child.name.includes("Github")) {
+        items.Github = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 0);
+      }
+
+      if (child.name.includes("LinkedIn")) {
+        items.LinkedIn = {
+          mesh: child,
+        };
+        child.scale.set(0, 0, 0);
+      }
+
       if (child.name.includes("Glass")) {
         child.material = glassMaterial;
       } else if (child.name.includes("Screen")) {
@@ -178,8 +493,48 @@ loader.load("/models/Room_Portfolio_V5.glb", (glb) => {
       }
     }
   });
+
   scene.add(glb.scene);
+  playIntroAnimation();
 });
+
+function playIntroAnimation() {
+  const timeline1 = gsap.timeline({
+    defaults: {
+      duration: 0.8,
+      ease: "back.out(1.8)",
+    },
+  });
+  timeline1.timeScale(0.8);
+
+  const plank1 = items.Plank_1?.mesh;
+  const plank2 = items.Plank_2?.mesh;
+  const work = items.Work?.mesh;
+  const about = items.About?.mesh;
+  const contact = items.Contact?.mesh;
+
+  timeline1
+    .to(plank1.scale, { x: 1, y: 1 })
+    .to(plank2.scale, { x: 1, y: 1, z: 1 }, "-=0.5")
+    .to(work.scale, { x: 1, y: 1, z: 1 }, "-=0.55")
+    .to(about.scale, { x: 1, y: 1, z: 1 }, "-=0.55")
+    .to(contact.scale, { x: 1, y: 1, z: 1 }, "-=0.55");
+
+  const timeline2 = gsap.timeline({
+    defaults: {
+      duration: 0.8,
+      ease: "back.out(1.8)",
+    },
+  });
+  timeline2.timeScale(0.8);
+
+  const github = items.Github?.mesh;
+  const linkedin = items.LinkedIn?.mesh;
+
+  timeline2
+    .to(github.scale, { x: 1, y: 1, z: 1, delay: 0.4 })
+    .to(linkedin.scale, { x: 1, y: 1, z: 1 }, "-=0.5");
+}
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -195,12 +550,14 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.minDistance = 5;
+controls.maxDistance = 30;
+controls.minPolarAngle = 0;
+controls.maxPolarAngle = Math.PI / 2;
+controls.minAzimuthAngle = 0;
+controls.maxAzimuthAngle = Math.PI / 2;
+
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.update();
@@ -224,7 +581,63 @@ window.addEventListener("resize", () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
-const render = (time) => {
+function playHoverAnimation(object, isHovering, options = {}) {
+  const { mode = "scaleAndRotate" } = options;
+  const scaleFactor = 1.4;
+
+  gsap.killTweensOf(object.scale);
+  gsap.killTweensOf(object.rotation);
+  gsap.killTweensOf(object.position);
+
+  if (isHovering) {
+    gsap.to(object.scale, {
+      x: object.userData.initialScale.x * scaleFactor,
+      y: object.userData.initialScale.y * scaleFactor,
+      z: object.userData.initialScale.z * scaleFactor,
+      duration: 0.5,
+      ease: "back.out(2)",
+    });
+
+    if (mode !== "scaleOnly") {
+      if (object.name.includes("About")) {
+        gsap.to(object.rotation, {
+          x: object.userData.initialRotation.x - Math.PI / 10,
+          duration: 0.5,
+          ease: "back.out(2)",
+        });
+      } else {
+        gsap.to(object.rotation, {
+          x: object.userData.initialRotation.x + Math.PI / 10,
+          duration: 0.5,
+          ease: "back.out(2)",
+        });
+      }
+    }
+  } else {
+    gsap.to(object.scale, {
+      x: object.userData.initialScale.x,
+      y: object.userData.initialScale.y,
+      z: object.userData.initialScale.z,
+      duration: 0.3,
+      ease: "back.out(2)",
+    });
+
+    if (mode !== "scaleOnly") {
+      gsap.to(object.rotation, {
+        x: object.userData.initialRotation.x,
+        duration: 0.3,
+        ease: "back.out(2)",
+      });
+    }
+  }
+}
+
+function getHoverModeForObject(object) {
+  const item = Object.values(items).find((entry) => entry?.mesh === object);
+  return item?.hoverMode || "scaleAndRotate";
+}
+
+const render = (timestamp) => {
   controls.update();
 
   //   console.log(camera.position);
@@ -236,25 +649,60 @@ const render = (time) => {
     fan.rotation.z -= 0.06;
   });
 
-  // Raycaster
-  raycaster.setFromCamera(pointer, camera);
+  //Chair rotation animation
+  const chair = items.Chair_Top;
 
-  currentIntersects = raycaster.intersectObjects(raycasterObjects);
+  if (chair?.mesh) {
+    const time = timestamp * 0.001;
+    const baseAmplitude = Math.PI / 8;
 
-  for (let i = 0; i < currentIntersects.length; i++) {
-    // currentIntersects[i].object.material.color.set(0xff0000);
+    const rotationOffset =
+      baseAmplitude *
+      Math.sin(time * 0.5) *
+      (1 - Math.abs(Math.sin(time * 0.5) * 0.3));
+
+    chair.mesh.rotation.y = chair.initialRotation.y + rotationOffset;
   }
 
-  if (currentIntersects.length > 0) {
-    const currentIntersectsObject = currentIntersects[0].object;
+  // Raycaster
+  if (!isModalOpen) {
+    raycaster.setFromCamera(pointer, camera);
 
-    if (currentIntersectsObject.name.includes("Pointer")) {
-      document.body.style.cursor = "pointer";
+    currentIntersects = raycaster.intersectObjects(raycasterObjects);
+
+    for (let i = 0; i < currentIntersects.length; i++) {
+      // currentIntersects[i].object.material.color.set(0xff0000);
+    }
+
+    if (currentIntersects.length > 0) {
+      const currentIntersectsObject = currentIntersects[0].object;
+
+      if (currentIntersectsObject.name.includes("Hover")) {
+        if (currentIntersectsObject !== currentHoveredObject) {
+          if (currentHoveredObject) {
+            const mode = getHoverModeForObject(currentHoveredObject);
+            playHoverAnimation(currentHoveredObject, false, { mode });
+          }
+
+          const mode = getHoverModeForObject(currentIntersectsObject);
+          playHoverAnimation(currentIntersectsObject, true, { mode });
+          currentHoveredObject = currentIntersectsObject;
+        }
+      }
+
+      if (currentIntersectsObject.name.includes("Pointer")) {
+        document.body.style.cursor = "pointer";
+      } else {
+        document.body.style.cursor = "default";
+      }
     } else {
+      if (currentHoveredObject) {
+        const mode = getHoverModeForObject(currentHoveredObject);
+        playHoverAnimation(currentHoveredObject, false, { mode });
+        currentHoveredObject = null;
+      }
       document.body.style.cursor = "default";
     }
-  } else {
-    document.body.style.cursor = "default";
   }
 
   renderer.render(scene, camera);
