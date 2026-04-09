@@ -315,7 +315,7 @@ window.addEventListener(
 
 window.addEventListener("click", handleRaycasterInteraction);
 
-loader.load("/models/Room_Portfolio_V10.glb", (glb) => {
+loader.load("/models/Room_Portfolio_V14.glb", (glb) => {
   glb.scene.traverse((child) => {
     if (child.isMesh) {
       if (child.name.includes("Chair_Top")) {
@@ -544,8 +544,6 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-camera.position.set(15.013087608044822, 8.219567956753812, 12.040122376671192);
-
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -561,11 +559,30 @@ controls.maxAzimuthAngle = Math.PI / 2;
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.update();
-controls.target.set(
-  0.12955454558590865,
-  1.1045767981948078,
-  -0.7946193309291271
-);
+
+if (window.innerWidth < 768) {
+  camera.position.set(
+    29.764266631399764,
+    3.110040666860126,
+    3.4198740268062964
+  );
+  controls.target.set(
+    0.12955454558590865,
+    1.1045767981948078,
+    -0.7946193309291271
+  );
+} else {
+  camera.position.set(
+    15.013087608044822,
+    8.219567956753812,
+    12.040122376671192
+  );
+  controls.target.set(
+    0.12955454558590865,
+    1.1045767981948078,
+    -0.7946193309291271
+  );
+}
 
 // Event Listeners
 window.addEventListener("resize", () => {
