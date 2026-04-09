@@ -4,6 +4,15 @@ import { OrbitControls } from "./utils/OrbitControls.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import gsap from "gsap";
+import { Howl } from "howler";
+
+/** ----------------- Audio setup----------------- */
+const BACKGROUND_MUSIC_VOLUME = 1;
+const backgroundMusic = new Howl({
+  src: "/audio/music/Littleroot Town.mp3",
+  loop: true,
+  volume: BACKGROUND_MUSIC_VOLUME,
+});
 
 const canvas = document.querySelector("#experience-canvas");
 const sizes = { height: window.innerHeight, width: window.innerWidth };
@@ -75,9 +84,6 @@ const hideModal = (modal) => {
 };
 
 const zAxixFans = [];
-// let chairTop;
-let coffeePosition;
-
 const items = {};
 
 const raycasterObjects = [];
@@ -92,8 +98,6 @@ const socialLinks = {
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-
-const hitboxToObjectMap = new Map();
 
 // Loaders
 const textureLoader = new THREE.TextureLoader();
@@ -171,111 +175,6 @@ window.addEventListener(
   },
   { passive: false }
 );
-
-function shouldUseOriginalMesh(objectName) {
-  return useOriginalMeshObjects.some((meshName) =>
-    objectName.includes(meshName)
-  );
-}
-
-function createStaticHitbox(originalObject) {
-  // Check if we should use original mesh
-  if (shouldUseOriginalMesh(originalObject.name)) {
-    if (!originalObject.userData.initialScale) {
-      originalObject.userData.initialScale = new THREE.Vector3().copy(
-        originalObject.scale
-      );
-    }
-    if (!originalObject.userData.initialPosition) {
-      originalObject.userData.initialPosition = new THREE.Vector3().copy(
-        originalObject.position
-      );
-    }
-    if (!originalObject.userData.initialRotation) {
-      originalObject.userData.initialRotation = new THREE.Euler().copy(
-        originalObject.rotation
-      );
-    }
-
-    originalObject.userData.originalObject = originalObject;
-    return originalObject;
-  }
-
-  if (!originalObject.userData.initialScale) {
-    originalObject.userData.initialScale = new THREE.Vector3().copy(
-      originalObject.scale
-    );
-  }
-  if (!originalObject.userData.initialPosition) {
-    originalObject.userData.initialPosition = new THREE.Vector3().copy(
-      originalObject.position
-    );
-  }
-  if (!originalObject.userData.initialRotation) {
-    originalObject.userData.initialRotation = new THREE.Euler().copy(
-      originalObject.rotation
-    );
-  }
-
-  const currentScale = originalObject.scale.clone();
-  const hasZeroScale =
-    currentScale.x === 0 || currentScale.y === 0 || currentScale.z === 0;
-
-  if (hasZeroScale && originalObject.userData.originalScale) {
-    originalObject.scale.copy(originalObject.userData.originalScale);
-  }
-
-  const box = new THREE.Box3().setFromObject(originalObject);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  if (hasZeroScale) {
-    originalObject.scale.copy(currentScale);
-  }
-
-  let hitboxGeometry;
-  let sizeMultiplier = { x: 1.1, y: 1.75, z: 1.1 };
-
-  hitboxGeometry = new THREE.BoxGeometry(
-    size.x * sizeMultiplier.x,
-    size.y * sizeMultiplier.y,
-    size.z * sizeMultiplier.z
-  );
-
-  const hitboxMaterial = new THREE.MeshBasicMaterial({
-    transparent: true,
-    opacity: 0,
-    visible: false,
-  });
-
-  const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-  hitbox.position.copy(center);
-  hitbox.name = originalObject.name + "_Hitbox";
-  hitbox.userData.originalObject = originalObject;
-
-  if (originalObject.name.includes("Headphones")) {
-    hitbox.rotation.x = 0;
-    hitbox.rotation.y = Math.PI / 4;
-    hitbox.rotation.z = 0;
-  }
-
-  return hitbox;
-}
-
-function createDelayedHitboxes() {
-  objectsNeedingHitboxes.forEach((child) => {
-    const raycastObject = createStaticHitbox(child);
-
-    if (raycastObject !== child) {
-      scene.add(raycastObject);
-    }
-
-    raycasterObjects.push(raycastObject);
-    hitboxToObjectMap.set(raycastObject, child);
-  });
-
-  objectsNeedingHitboxes.length = 0;
-}
 
 function handleRaycasterInteraction() {
   if (currentIntersects.length > 0) {
@@ -726,5 +625,5 @@ const render = (timestamp) => {
 
   window.requestAnimationFrame(render);
 };
-
+backgroundMusic.play();
 render();
