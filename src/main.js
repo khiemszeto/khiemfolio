@@ -8,6 +8,7 @@ import { Howl } from "howler";
 
 /** ----------------- Audio setup----------------- */
 const BACKGROUND_MUSIC_VOLUME = 1;
+const FADE_VOLUME = 0;
 const backgroundMusic = new Howl({
   src: "/audio/music/Littleroot Town.mp3",
   loop: true,
@@ -214,7 +215,7 @@ window.addEventListener(
 
 window.addEventListener("click", handleRaycasterInteraction);
 
-loader.load("/models/Room_Portfolio_V14.glb", (glb) => {
+loader.load("/models/Room_Portfolio_V15.glb", (glb) => {
   glb.scene.traverse((child) => {
     if (child.isMesh) {
       if (child.name.includes("Chair_Top")) {
@@ -552,7 +553,78 @@ function getHoverModeForObject(object) {
   const item = Object.values(items).find((entry) => entry?.mesh === object);
   return item?.hoverMode || "scaleAndRotate";
 }
+/**  -------------------------- Event Listeners -------------------------- */
+const soundButton = document.querySelector(".sound-button");
+const soundOffButton = document.querySelector(".sound-off-svg");
+const soundOnButton = document.querySelector(".sound-on-svg");
 
+const updateSoundState = (muted) => {
+  if (muted) {
+    backgroundMusic.volume(FADE_VOLUME);
+  } else {
+    backgroundMusic.volume(BACKGROUND_MUSIC_VOLUME);
+  }
+};
+
+const handleMuteToggle = (e) => {
+  e.preventDefault();
+
+  isMuted = !isMuted;
+  updateSoundState(isMuted);
+
+  if (!backgroundMusic.playing()) {
+    backgroundMusic.play();
+  }
+
+  gsap.to(soundButton, {
+    rotate: -50,
+    scale: 10,
+    duration: 0.5,
+    ease: "back.out(2)",
+    onStart: () => {
+      if (!isMuted) {
+        soundOffButton.style.display = "none";
+        soundOnButton.style.display = "block";
+      } else {
+        soundOffButton.style.display = "block";
+        soundOnButton.style.display = "none";
+      }
+
+      gsap.to(soundButton, {
+        rotate: 0,
+        scale: 1,
+        duration: 0.5,
+        ease: "back.out(2)",
+        onComplete: () => {
+          gsap.set(soundButton, {
+            clearProps: "all",
+          });
+        },
+      });
+    },
+  });
+};
+
+let isMuted = false;
+soundButton.addEventListener(
+  "click",
+  (e) => {
+    if (touchHappened) return;
+    handleMuteToggle(e);
+  },
+  { passive: false }
+);
+
+soundButton.addEventListener(
+  "touchend",
+  (e) => {
+    touchHappened = true;
+    handleMuteToggle(e);
+  },
+  { passive: false }
+);
+
+/**  -------------------------- Render and Animations Stuff -------------------------- */
 const render = (timestamp) => {
   controls.update();
 

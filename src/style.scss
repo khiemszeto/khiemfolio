@@ -1,13 +1,12 @@
 @use "./styles/fonts.scss";
 @use "./styles/reset.scss";
 @use "./styles/variables.scss" as vars;
+@use "./styles/default.scss" as media;
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Mouldy Cheese", Impact, Haettenschweiler, "Arial Narrow Bold",
-    sans-serif;
 }
 
 :root {
@@ -32,6 +31,19 @@
   }
 }
 
+// Text styles
+
+h1,
+h2 {
+  font-family: "Mouldy Cheese";
+}
+
+p,
+ul,
+li {
+  font-family: "Shifty Notes";
+}
+
 //Modals — hidden until showModal() sets display:block (otherwise divs are visible on load)
 .modal {
   display: none;
@@ -44,4 +56,61 @@
   font-size: 32px;
   z-index: 9999;
   background-color: vars.$base-light-blue;
+}
+
+.toggle-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 6px solid #63a8e1;
+  background-color: vars.$base-light-blue;
+  padding: 2px;
+  color: vars.$base-blue;
+  border-radius: 1.2rem;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+
+  @include media.media("<=tablet") {
+    top: 15px;
+    right: 15px;
+  }
+}
+
+.sound-button {
+  display: block;
+  color: #63a8e1;
+
+  @include media.media("<=tablet") {
+    top: 15px;
+    right: 18px;
+  }
+}
+
+.sound-button {
+  position: fixed;
+  top: 24px;
+  right: 36px;
+  z-index: 2;
+  cursor: pointer;
+
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  &:hover {
+    transform: rotate(-10deg) scale(1.2);
+  }
+}
+
+.sound-svg {
+  width: 50px;
+  height: 50px;
+}
+
+.sound-off-svg {
+  width: 50px;
+  height: 50px;
+  display: none;
+
+  @include media.media("<=tablet") {
+    height: 30px;
+    width: 30px;
+  }
 }
