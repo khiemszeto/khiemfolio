@@ -5,3 +5,9 @@ $base-black: #000;
 $base-white: #fdfdfd;
 
 $base-light-blue: #e7eaf0;
+
+@mixin centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

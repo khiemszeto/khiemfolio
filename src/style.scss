@@ -46,16 +46,145 @@ li {
 
 //Modals — hidden until showModal() sets display:block (otherwise divs are visible on load)
 .modal {
+  @include vars.centered;
   display: none;
   position: absolute;
   top: 50%;
   left: 50%;
-  max-width: 700px;
-  width: 100%;
+  max-width: 1200px;
+  width: 90%;
   transform: translate(-50%, -50%);
-  font-size: 32px;
+  font-size: 2.2rem;
+  padding: 30px;
+  border-radius: 25px;
+  border: 8px solid #63a8e1;
   z-index: 9999;
   background-color: vars.$base-light-blue;
+  max-height: 90vh;
+  overflow: visible;
+}
+
+.about {
+  max-width: 900px;
+}
+
+.modal-wrapper {
+  @include vars.centered;
+  width: 100%;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.modal-title {
+  @include vars.centered;
+  padding: 10px 80px;
+  border-radius: 20px;
+  color: #63a8e1;
+  background-color: vars.$base-blue;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  @include media.media("<=tablet") {
+    font-size: 1.5rem;
+    padding: 10px 20px;
+    width: 100%;
+  }
+}
+
+.modal-content {
+  height: auto;
+  max-height: calc(90vh - 180px);
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+
+  @include media.media("<=tablet") {
+    height: 350px;
+  }
+}
+
+.about .modal-content {
+  height: 550px;
+
+  @include media.media("<=tablet") {
+    height: 500px;
+  }
+}
+
+.modal-content-wrapper {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    width: 2px;
+    border-radius: 4px;
+    background-color: vars.$base-blue;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #63a8e1;
+    border-radius: 4px;
+  }
+}
+
+.image-wrapper {
+  width: 100%;
+  height: 550px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  @include media.media("<=tablet") {
+    height: auto;
+  }
+}
+
+.base-image {
+  height: 100%;
+  width: 100%;
+  border-radius: 24px;
+  object-fit: cover;
+  border: 6px solid #63a8e1;
+}
+
+.modal-paragraph-text {
+  font-size: 1.5rem;
+  @include media.media("<=tablet") {
+    font-size: 1.3rem;
+  }
+}
+
+.sm-margin-top {
+  margin-top: 12px;
+}
+
+.modal-exit-button {
+  @include vars.centered;
+  position: absolute;
+  top: -2.3rem;
+  left: -2.3rem;
+  border: 8px solid #63a8e1;
+  background-color: vars.$base-blue;
+  padding: 15px;
+  border-radius: 1.2rem;
+  cursor: pointer;
+  transform: rotate(-15deg);
+  transition: transform 0.2s cubic-bezier(0.39, 0.575, 0.565, 1);
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+
+  &:hover {
+    transform: rotate(20deg) scale(1.1);
+  }
+}
+
+.exit-button-svg {
+  width: 50px;
+  height: 50px;
 }
 
 .toggle-buttons {
