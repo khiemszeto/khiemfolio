@@ -84,6 +84,77 @@ const hideModal = (modal) => {
   });
 };
 
+/**  -------------------------- Loading Screen  -------------------------- */
+
+const manager = new THREE.LoadingManager();
+
+const loadingScreen = document.querySelector(".loading-screen");
+const loadingScreenButton = document.querySelector(".loading-screen-button");
+const noSoundButton = document.querySelector(".no-sound-button");
+
+manager.onLoad = function () {
+  loadingScreenButton.style.border = "8px solid #63a8e1";
+  loadingScreenButton.style.background = "#bccce7";
+  loadingScreenButton.style.color = "#63a8e1";
+  loadingScreenButton.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+  loadingScreenButton.style.cursor = "pointer";
+  loadingScreenButton.textContent = "Enter!";
+  loadingScreenButton.style.transtition =
+    "transform 0.3s cubic-bezier(0.34, 1.56, 0.64,1)";
+  let isDisabled = false;
+
+  noSoundButton.textContent = "Enter without Sound :((";
+
+  function handleEnter(withSound = true) {
+    if (isDisabled) return;
+
+    noSoundButton.textContent = "";
+    loadingScreenButton.style.cursor = "default";
+    loadingScreenButton.style.border = "8px solid #63a8e1";
+    loadingScreenButton.style.background = "#bccce7";
+    loadingScreenButton.style.color = "#63a8e1";
+    loadingScreenButton.style.boxShadow = "none";
+    loadingScreenButton.textContent = "~ Hello, welcome to my room ~";
+    loadingScreen.style.background = "#bccce7";
+    isDisabled = true;
+
+    if (!withSound) {
+      isMuted = true;
+      updateSoundState(true);
+      soundOffButton.style.display = "block";
+      soundOnButton.style.display = "none";
+    } else {
+      backgroundMusic.play();
+    }
+
+    playReveal();
+  }
+
+  loadingScreenButton.addEventListener("mouseenter", () => {
+    loadingScreenButton.style.transform = "scale(1.3)";
+  });
+
+  loadingScreenButton.addEventListener("mouseleave", () => {
+    loadingScreenButton.style.transform = "none";
+  });
+
+  loadingScreenButton.addEventListener("touchend", (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    handleEnter();
+  });
+
+  loadingScreenButton.addEventListener("click", (e) => {
+    if (touchHappened) return;
+    handleEnter(true);
+  });
+
+  noSoundButton.addEventListener("click", (e) => {
+    if (touchHappened) return;
+    handleEnter(false);
+  });
+};
+
 const zAxixFans = [];
 const items = {};
 
@@ -107,7 +178,7 @@ const textureLoader = new THREE.TextureLoader();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("/draco/");
 
-const loader = new GLTFLoader();
+const loader = new GLTFLoader(manager);
 loader.setDRACOLoader(dracoLoader);
 
 // Cube Texture Loader
@@ -395,8 +466,32 @@ loader.load("/models/Room_Portfolio_V15.glb", (glb) => {
   });
 
   scene.add(glb.scene);
-  playIntroAnimation();
 });
+
+function playReveal() {
+  const tl = gsap.timeline();
+
+  tl.to(loadingScreen, {
+    scale: 0.5,
+    duration: 1.2,
+    delay: 0.5,
+    ease: "back.in(2)",
+  }).to(
+    loadingScreen,
+    {
+      y: "200vh",
+      transform: "perspective(1000px) rotateX(45deg) rotateY(-35deg)",
+      duration: 1.2,
+      ease: "back.in(2)",
+      onComplete: () => {
+        isModalOpen = false;
+        playIntroAnimation();
+        loadingScreen.remove();
+      },
+    },
+    "-0.1"
+  );
+}
 
 function playIntroAnimation() {
   const timeline1 = gsap.timeline({
@@ -697,5 +792,4 @@ const render = (timestamp) => {
 
   window.requestAnimationFrame(render);
 };
-backgroundMusic.play();
 render();

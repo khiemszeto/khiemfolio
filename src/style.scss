@@ -44,6 +44,105 @@ li {
   font-family: "Shifty Notes";
 }
 
+.loading-screen {
+  @include vars.centered;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 108vw;
+  height: 108vh;
+  margin-top: -54vh;
+  margin-left: -54vw;
+  z-index: 999999;
+  overflow: hidden;
+  border: 8px solid #63a8e1;
+  border-radius: 40px;
+  background-color: vars.$base-blue;
+  transform: perspective(1000px);
+}
+
+.loading-screen-button {
+  font-family: "Mouldy Cheese";
+  font-size: 42px;
+  color: #e6dede;
+  @include vars.centered;
+  background-color: transparent;
+  padding: 10px 40px;
+  outline: none;
+  border-radius: 1.2rem;
+  border: none;
+
+  @include media.media("<=tablet") {
+    font-size: 32px;
+  }
+}
+
+.no-sound-button {
+  font-family: "Mouldy Cheese";
+  @include vars.centered;
+  background-color: transparent;
+  border: none;
+  color: #63a8e1;
+
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  font-size: 32px;
+  transform: translate(-50%, -50%);
+
+  &:hover {
+    color: #e6dede;
+    cursor: pointer;
+  }
+
+  @include media.media("<=tablet") {
+    font-size: 24px;
+  }
+}
+
+.instructions {
+  @include vars.centered;
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  max-width: 1200px;
+  width: 90%;
+  font-size: 28px;
+  transform: translate(-50%, -50%);
+  font-family: "Shifty Notes";
+  color: #e6dede;
+}
+
+.desktop-instruction {
+  @include media.media("<tablet") {
+    display: none;
+  }
+}
+
+.mobile-instruction {
+  @include media.media(">=tablet") {
+    display: none;
+  }
+  @include media.media("<=tablet") {
+    font-size: 28px;
+  }
+}
+
+// Overlay
+.overlay {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: none;
+  background-color: rgba(32, 32, 32, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 //Modals — hidden until showModal() sets display:block (otherwise divs are visible on load)
 .modal {
   @include vars.centered;
@@ -110,6 +209,14 @@ li {
   }
 }
 
+.work .modal-content {
+  height: 550px;
+
+  @include media.media("<=tablet") {
+    height: 500px;
+  }
+}
+
 .about .modal-content {
   height: 550px;
 
@@ -125,6 +232,16 @@ li {
 
 .contact .modal-content-wrapper {
   overflow: visible;
+}
+
+.work .modal-content-wrapper {
+  @include vars.centered;
+  flex-direction: row;
+  gap: 20px;
+  @include media.media("<=tablet") {
+    flex-direction: column;
+    justify-content: space-between;
+  }
 }
 
 .modal-content-wrapper {
@@ -149,6 +266,41 @@ li {
     background-color: #63a8e1;
     border-radius: 4px;
   }
+}
+
+.work-project {
+  @include vars.centered;
+  padding-top: 16px;
+  flex-direction: column;
+  gap: 28px;
+  width: 80%;
+  justify-content: start;
+  height: 100%;
+  @include media.media("<=tablet") {
+    height: auto;
+    width: 100%;
+    padding-bottom: 24px;
+  }
+}
+
+.work-project-wrapper {
+  width: 100%;
+  height: auto;
+}
+
+.work-image-wrapper {
+  width: 100%;
+  height: 350px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.work-base-image {
+  height: 100%;
+  width: 100%;
+  border-radius: 24px;
+  object-fit: cover;
+  border: 6px solid #63a8e1;
 }
 
 .image-wrapper {

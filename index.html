@@ -7,6 +7,19 @@
     <title>Khiem's Room Folio</title>
   </head>
   <body>
+    <div class="loading-screen">
+      <button class="loading-screen-button">Loading...</button>
+      <button class="no-sound-button"></button>
+      <p class="desktop-instruction instructions">
+        use left/rihgt click and mouse wheel to navigate
+      </p>
+      <p class="mobile-instruction instructions">
+        use one or two fingers to navigate
+      </p>
+    </div>
+
+    <div class="overlay"></div>
+
     <button class="sound-button toggle-buttons">
       <svg
         viewBox="0 0 24 24"
@@ -74,7 +87,84 @@
       </svg>
     </button>
     <div class="work modal">
-      <h1 class="modal-title">workworkworkworkwork</h1>
+      <div class="modal-wrapper">
+        <h1 class="modal-title">- My Work -</h1>
+
+        <div class="modal-content">
+          <div class="modal-content-wrapper">
+            <div class="work-project">
+              <div class="work-project-wrapper">
+                <div class="work-image-wrapper">
+                  <img
+                    class="work-base-image"
+                    src="/images/healthbridge.webp"
+                    alt=""
+                  />
+                </div>
+                <div class="paragraph-section">
+                  <h2 class="modal-paragraph-header">HeathBridge</h2>
+                  <p class="modal-paragraph-text">
+                    HealthBridge is a personal health dashboard app that syncs
+                    Apple Health data from your iOS app to a backend, stores it
+                    in Postgres, and visualizes trends in a web dashboard
+                    (overview, activity, vitals, sleep, and hearing metrics).
+                    You can access it by clicking on the monitor.
+                  </p>
+                  <p class="modal-paragraph-text sm-margin-top">
+                    Skills: Swift + HealthKit, Node.js, Express, PostgreSQL,
+                    React
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="work-project">
+              <div class="work-project-wrapper">
+                <div class="work-image-wrapper">
+                  <img
+                    class="work-base-image"
+                    src="/images/thinkboard.webp"
+                    alt=""
+                  />
+                </div>
+                <div class="paragraph-section">
+                  <h2 class="modal-paragraph-header">Thinkboard</h2>
+                  <p class="modal-paragraph-text">
+                    ThinkBoard is a full-stack MERN note app that lets users
+                    create, view, update, and delete notes.
+                  </p>
+                  <p class="modal-paragraph-text sm-margin-top">
+                    Skills: Node.js, Express, MongoDB, React, Tailwind CSS
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="work-project">
+              <div class="work-project-wrapper">
+                <div class="work-image-wrapper">
+                  <img
+                    class="work-base-image"
+                    src="/images/natour.webp"
+                    alt=""
+                  />
+                </div>
+                <div class="paragraph-section">
+                  <h2 class="modal-paragraph-header">Natour</h2>
+                  <p class="modal-paragraph-text">
+                    Natours is a web app where people can browse adventure
+                    tours, see where each trip goes, read reviews from other
+                    travelers, book a spot, and manage their account and
+                    payments in one place.
+                  </p>
+                  <p class="modal-paragraph-text sm-margin-top">
+                    Skills: Node.js, Express, MongoDB/Mongoose, REST APIs, JWT
+                    auth, Pug SSR, Stripe payments, Mapbox, security middleware
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <button class="modal-exit-button">
         <svg
           class="exit-button-svg"
