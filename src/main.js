@@ -149,6 +149,12 @@ manager.onLoad = function () {
     handleEnter(true);
   });
 
+  noSoundButton.addEventListener("touchend", (e) => {
+    touchHappened = true;
+    e.preventDefault();
+    handleEnter(false);
+  });
+
   noSoundButton.addEventListener("click", (e) => {
     if (touchHappened) return;
     handleEnter(false);
