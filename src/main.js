@@ -10,7 +10,7 @@ import { Howl } from "howler";
 const BACKGROUND_MUSIC_VOLUME = 1;
 const FADE_VOLUME = 0;
 const backgroundMusic = new Howl({
-  src: "/audio/music/Littleroot Town.mp3",
+  src: "/audio/music/01-01 Littleroot Town (From _Pokemon Ruby_).mp3",
   loop: true,
   volume: BACKGROUND_MUSIC_VOLUME,
 });
