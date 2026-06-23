@@ -542,7 +542,7 @@ const camera = new THREE.PerspectiveCamera(
   45,
   sizes.width / sizes.height,
   0.1,
-  1000
+  200
 );
 
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -550,8 +550,8 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.minDistance = 5;
-controls.maxDistance = 30;
+controls.minDistance = 10;
+controls.maxDistance = 45;
 controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI / 2;
 controls.minAzimuthAngle = 0;
