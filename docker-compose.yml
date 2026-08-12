@@ -1,0 +1,16 @@
+services:
+  client-react-nginx-unprevil:
+    networks:
+      - my-network
+    container_name: client-react-nginx-unprevil
+    ports:
+      - 80:8080
+    restart: unless-stopped
+    image: client-react-nginx-unprevil
+    build:
+      context: .
+      dockerfile: Dockerfile
+networks:
+  my-network:
+    external: true
+    name: my-network
